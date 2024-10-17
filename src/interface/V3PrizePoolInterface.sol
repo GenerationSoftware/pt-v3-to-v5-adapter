@@ -2,9 +2,12 @@
 pragma solidity >=0.5.0 <0.9.0;
 
 import "@openzeppelin/utils/introspection/IERC165.sol";
+import "./V3TokenListenerInterface.sol";
 
 /// @title An interface that allows a contract to listen to token mint, transfer and burn events.
 interface V3PrizePoolInterface {
+  function token() external view returns (address);
+
   /// @notice Called by the prize strategy to award prizes.
   /// @dev The amount awarded must be less than the awardBalance()
   /// @param to The address of the winner that receives the award
@@ -20,4 +23,13 @@ interface V3PrizePoolInterface {
   /// @dev This function also captures the reserve fees.
   /// @return The total amount of assets to be awarded for the current prize
   function captureAwardBalance() external returns (uint256);
+
+  function withdrawInstantlyFrom(
+    address from,
+    uint256 amount,
+    address controlledToken,
+    uint256 maximumExitFee
+  ) external returns (uint256);
+
+  function setPrizeStrategy(V3TokenListenerInterface _prizeStrategy) external;
 }

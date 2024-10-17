@@ -1,1 +1,2 @@
 @openzeppelin/=lib/openzeppelin-contracts/contracts/
+@pt-v5-liquidator-interfaces/=lib/pt-v5-liquidator-interfaces/src/interfaces/
