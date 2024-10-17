@@ -1,3 +1,8 @@
+## Notes on Accrual Rates
+
+USDC Vault: ~$3600 per month
+DAI vault: ~$400 per month
+
 ## Foundry
 
 **Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**

@@ -25,11 +25,11 @@ contract TestVaults is Test {
     address public constant V5_VAULT = 0x9eE31E845fF1358Bf6B1F914d3918c6223c75573;
 
     uint256 fork;
-    // uint256 forkBlock = 20986730;
+    uint256 forkBlock = 20986731;
 
     function setUp() public {
-        // fork = vm.createFork(vm.rpcUrl("mainnet"), forkBlock);
-        fork = vm.createFork(vm.rpcUrl("mainnet"));
+        fork = vm.createFork(vm.rpcUrl("mainnet"), forkBlock);
+        // fork = vm.createFork(vm.rpcUrl("mainnet"));
         vm.selectFork(fork);
     }
 
