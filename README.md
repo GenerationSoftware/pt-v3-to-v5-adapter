@@ -1,22 +1,8 @@
-## Notes on Accrual Rates
+## PoolTogether V3 to V5 Adapter
 
-USDC Vault: ~$3600 per month
-DAI vault: ~$400 per month
+The V3 to V5 Adapter wraps a PoolTogether V5 Prize Pool as a PoolTogether V5 Liquidation Source. This allows us to connect V3 prize pools to PoolTogether V5.
 
-## Foundry
-
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
-
-Foundry consists of:
-
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
-
-## Documentation
-
-https://book.getfoundry.sh/
+The adapter implements the V3 Prize Strategy interface and the V5 Liquidation Source interface.
 
 ## Usage
 
