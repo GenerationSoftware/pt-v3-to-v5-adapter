@@ -7,3 +7,6 @@
 [submodule "lib/pt-v5-liquidator-interfaces"]
 	path = lib/pt-v5-liquidator-interfaces
 	url = https://github.com/GenerationSoftware/pt-v5-liquidator-interfaces
+[submodule "lib/pt-v5-fixed-price-liquidator"]
+	path = lib/pt-v5-fixed-price-liquidator
+	url = https://github.com/GenerationSoftware/pt-v5-fixed-price-liquidator
