@@ -3,6 +3,9 @@ pragma solidity ^0.8.24;
 
 import { Test, Vm } from "forge-std/Test.sol";
 
+import { FixedPriceLiquidationPair, FixedPriceLiquidationPairFactory } from "pt-v5-fixed-price-liquidator/FixedPriceLiquidationPairFactory.sol";
+import { FixedPriceLiquidationRouter } from "pt-v5-fixed-price-liquidator/FixedPriceLiquidationRouter.sol";
+
 import { console2 } from "forge-std/console2.sol";
 
 import {
@@ -23,6 +26,7 @@ contract TestVaults is Test {
     IERC20 public constant DAI = IERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
     IERC20 public constant USDC = IERC20(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
     address public constant V5_VAULT = 0x9eE31E845fF1358Bf6B1F914d3918c6223c75573;
+    IERC20 public constant WETH = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
 
     uint256 fork;
     uint256 forkBlock = 20986731;
@@ -30,10 +34,16 @@ contract TestVaults is Test {
     V3PrizePoolLiquidatorAdapter usdcAdapter;
     V3PrizePoolLiquidatorAdapter daiAdapter;
 
+    FixedPriceLiquidationPairFactory pairFactory;
+    FixedPriceLiquidationRouter router;
+
     function setUp() public {
         fork = vm.createFork(vm.rpcUrl("mainnet"), forkBlock);
         // fork = vm.createFork(vm.rpcUrl("mainnet"));
         vm.selectFork(fork);
+
+        pairFactory = new FixedPriceLiquidationPairFactory();
+        router = new FixedPriceLiquidationRouter(pairFactory);
 
         usdcAdapter = new V3PrizePoolLiquidatorAdapter(
             USDC_PRIZE_POOL,
@@ -50,6 +60,7 @@ contract TestVaults is Test {
             V5_VAULT,
             GOV
         );
+
     }
 
     function testPullFunds() public {
@@ -70,6 +81,19 @@ contract TestVaults is Test {
     }
 
     function testLiquidate() public {
+        address usdcPair = address(pairFactory.createPair(
+            usdcAdapter,
+            address(WETH),
+            address(USDC),
+            0.5 ether,
+        0));
+        address daiPair = address(pairFactory.createPair(
+            usdcAdapter,
+            address(WETH),
+            address(DAI),
+            0.5 ether,
+        0));
+
         vm.startPrank(GOV);
         USDC_PRIZE_POOL.setPrizeStrategy(usdcAdapter);
         DAI_PRIZE_POOL.setPrizeStrategy(daiAdapter);
@@ -77,6 +101,32 @@ contract TestVaults is Test {
         daiAdapter.setLiquidationPair(GOV);
         usdcAdapter.pullFunds();
         daiAdapter.pullFunds();
+        usdcAdapter.setLiquidationPair(usdcPair);
+        daiAdapter.setLiquidationPair(daiPair);
         vm.stopPrank();
+
+        console2.log("GOV USDC balance", USDC.balanceOf(address(GOV)));
+        console2.log("GOV DAI balance", DAI.balanceOf(address(GOV)));
+
+        // progress time
+        // vm.warp(block.timestamp + 300 days);
+        vm.roll(block.number + 1851428);
+
+        console2.log("USDC balance before", USDC.balanceOf(address(this)));
+        console2.log("DAI balance before", DAI.balanceOf(address(this)));
+
+        // liquidate
+        deal(address(WETH), address(this), 0.5 ether);
+        WETH.approve(address(router), 1 ether);
+        router.swapExactAmountOut(
+            FixedPriceLiquidationPair(usdcPair),
+            address(this),
+            4000e6,
+            1 ether,
+            block.timestamp + 100
+        );
+
+        console2.log("USDC balance", USDC.balanceOf(address(this)));
+        console2.log("DAI balance", DAI.balanceOf(address(this)));
     }
 }
