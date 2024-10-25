@@ -27,53 +27,56 @@ contract TestVaults is Test {
     uint256 fork;
     uint256 forkBlock = 20986731;
 
+    V3PrizePoolLiquidatorAdapter usdcAdapter;
+    V3PrizePoolLiquidatorAdapter daiAdapter;
+
     function setUp() public {
         fork = vm.createFork(vm.rpcUrl("mainnet"), forkBlock);
         // fork = vm.createFork(vm.rpcUrl("mainnet"));
         vm.selectFork(fork);
-    }
 
-    function testUsdc() public {
-
-        vm.startPrank(GOV);
-
-        V3PrizePoolLiquidatorAdapter usdcAdapter = new V3PrizePoolLiquidatorAdapter(
+        usdcAdapter = new V3PrizePoolLiquidatorAdapter(
             USDC_PRIZE_POOL,
             USDC_CONTROLLED_TOKEN,
             V5_PRIZE_POOL,
-            V5_VAULT
+            V5_VAULT,
+            GOV
         );
-        V3PrizePoolLiquidatorAdapter daiAdapter = new V3PrizePoolLiquidatorAdapter(
+
+        daiAdapter = new V3PrizePoolLiquidatorAdapter(
             DAI_PRIZE_POOL,
             DAI_CONTROLLED_TOKEN,
             V5_PRIZE_POOL,
-            V5_VAULT
+            V5_VAULT,
+            GOV
         );
+    }
 
+    function testPullFunds() public {
+        console2.log("USDC balance", USDC.balanceOf(GOV));
+        console2.log("DAI balance", DAI.balanceOf(GOV));
+
+        vm.startPrank(GOV);
         USDC_PRIZE_POOL.setPrizeStrategy(usdcAdapter);
         DAI_PRIZE_POOL.setPrizeStrategy(daiAdapter);
-
-        usdcAdapter.setLiquidationPair(address(this));
-        daiAdapter.setLiquidationPair(address(this));
-
+        usdcAdapter.setLiquidationPair(GOV);
+        daiAdapter.setLiquidationPair(GOV);
+        usdcAdapter.pullFunds();
+        daiAdapter.pullFunds();
         vm.stopPrank();
 
-        usdcAdapter.transferTokensOut(
-            address(this),
-            address(this),
-            address(USDC),
-            usdcAdapter.liquidatableBalanceOf(address(USDC))
-        );
+        console2.log("USDC balance", USDC.balanceOf(GOV));
+        console2.log("DAI balance", DAI.balanceOf(GOV));
+    }
 
-        console2.log("USDC balance", USDC.balanceOf(address(this)));
-
-        daiAdapter.transferTokensOut(
-            address(this),
-            address(this),
-            address(DAI),
-            daiAdapter.liquidatableBalanceOf(address(DAI))
-        );
-
-        console2.log("DAI balance", DAI.balanceOf(address(this)));
+    function testLiquidate() public {
+        vm.startPrank(GOV);
+        USDC_PRIZE_POOL.setPrizeStrategy(usdcAdapter);
+        DAI_PRIZE_POOL.setPrizeStrategy(daiAdapter);
+        usdcAdapter.setLiquidationPair(GOV);
+        daiAdapter.setLiquidationPair(GOV);
+        usdcAdapter.pullFunds();
+        daiAdapter.pullFunds();
+        vm.stopPrank();
     }
 }

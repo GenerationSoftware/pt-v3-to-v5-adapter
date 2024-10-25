@@ -42,8 +42,9 @@ contract V3PrizePoolLiquidatorAdapter is
         V3PrizePoolInterface _v3PrizePool,
         address _controlledToken,
         V5PrizePoolInterface _v5PrizePool,
-        address _v5Vault
-    ) Ownable(msg.sender) {
+        address _v5Vault,
+        address _owner
+    ) Ownable(_owner) {
         v3PrizePool = _v3PrizePool;
         controlledToken = _controlledToken;
         underlyingToken = IERC20(_v3PrizePool.token());
@@ -70,26 +71,21 @@ contract V3PrizePoolLiquidatorAdapter is
 
     /**
      * @notice Transfers tokens to the receiver
-     * @param sender Address that triggered the liquidation
      * @param receiver Address of the account that will receive `tokenOut`
      * @param tokenOut Address of the token being bought
      * @param amountOut Amount of token being bought
      */
     function transferTokensOut(
-        address sender,
+        address,
         address receiver,
         address tokenOut,
         uint256 amountOut
     ) external onlyLiquidationPair returns (bytes memory) {
-        require(tokenOut == address(underlyingToken), "invalid token");
-        v3PrizePool.award(address(this), amountOut, controlledToken);
-        v3PrizePool.withdrawInstantlyFrom(
-            address(this),
-            amountOut,
-            controlledToken,
-            0
-        );
-        underlyingToken.transfer(receiver, amountOut);
+        _transferTokensOut(receiver, tokenOut, amountOut);
+    }
+
+    function pullFunds() external onlyLiquidationPair {
+        _transferTokensOut(liquidationPair, address(underlyingToken), v3PrizePool.captureAwardBalance());
     }
 
     /**
@@ -156,5 +152,21 @@ contract V3PrizePoolLiquidatorAdapter is
             "V3PrizePoolLiquidatorAdapter: caller is not the liquidation pair"
         );
         _;
+    }
+
+    function _transferTokensOut(
+        address receiver,
+        address tokenOut,
+        uint256 amountOut
+    ) internal returns (bytes memory) {
+        require(tokenOut == address(underlyingToken), "invalid token");
+        v3PrizePool.award(address(this), amountOut, controlledToken);
+        v3PrizePool.withdrawInstantlyFrom(
+            address(this),
+            amountOut,
+            controlledToken,
+            0
+        );
+        underlyingToken.transfer(receiver, amountOut);
     }
 }
